@@ -56,6 +56,7 @@ Which should result in response similar to:
 
 ### Local development
 
+
 The easiest way to develop and test your function is to use the `dev` command:
 
 ```
