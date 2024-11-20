@@ -1,0 +1,26 @@
+{
+  "name": "serverless-challenge",
+  "version": "1.0.0",
+  "description": "Challenge from Serverless Guru",
+  "main": "handler.js",
+  "scripts": {
+    "test": "\"echo \\\"Error: no test specified\\\" && exit 1\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hodges5252/Serverless-Challenge.git"
+  },
+  "keywords": [
+    "[\"serverless\"",
+    "\"aws\"",
+    "\"cloud\"",
+    "\"lambda\"",
+    "\"api\"]"
+  ],
+  "author": "Ethan Hodges",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hodges5252/Serverless-Challenge/issues"
+  },
+  "homepage": "https://github.com/Hodges5252/Serverless-Challenge#readme"
+}
