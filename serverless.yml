@@ -28,28 +28,28 @@ provider:
 
 functions:
   createBudget:
-    handler: handlers/budgetsHandler.createBudget
+    handler: handlers/budgetHandler.createBudget
     events:
       - http:
           path: budget
           method: post
 
   readBudget:
-    handler: handlers/budgetsHandler.readBudget
+    handler: handlers/budgetHandler.readBudget
     events:
       - http:
           path: budget/{budgetId}
           method: get
 
   updateBudget:
-    handler: handlers/budgetsHandler.updateBudget
+    handler: handlers/budgetHandler.updateBudget
     events:
       - http:
           path: budget/{budgetId}
           method: put
 
   deleteBudget:
-    handler: handlers/budgetsHandler.deleteBudget
+    handler: handlers/budgetHandler.deleteBudget
     events:
       - http:
           path: budget/{budgetId}
