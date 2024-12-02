@@ -1,45 +1,128 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
 org: ethancreativeworks
-# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: serverless-challenge
-# "service" is the name of this project. This will also be added to your AWS resource names.
 service: Serverless-Challenge
 
 provider:
   name: aws
   runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
   environment:
-    DYNAMODB_CUSTOMER_TABLE: ${self:service}-customerTable-${sls:stage}
+    BUDGET_TABLE: ${self:service}-budgetTable-${sls:stage}
+    RECORDS_TABLE: ${self:service}-recordsTable-${sls:stage}
+    NODE_ENV: ${self:custom.stageConfig.${sls:stage}.NODE_ENV}
   iam:
     role:
       statements:
         - Effect: 'Allow'
           Action:
             - 'dynamodb:PutItem'
-            - 'dynamodb:Get*'
-            - 'dynamodb:Scan*'
-            - 'dynamodb:UpdateItem'
+            - 'dynamodb:GetItem'
+            - 'dynamodb:Query'
+            - 'dynamodb:Scan'
             - 'dynamodb:DeleteItem'
-          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:service}-customerTable-${sls:stage}
+            - 'dynamodb:UpdateItem'
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:service}-budgetTable-${sls:stage}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:service}-recordsTable-${sls:stage}
 
 functions:
-  hello:
-    handler: handler.hello
+  createBudget:
+    handler: handlers/budgetsHandler.createBudget
     events:
-      - httpApi:
-          path: /
+      - http:
+          path: budget
+          method: post
+
+  readBudget:
+    handler: handlers/budgetsHandler.readBudget
+    events:
+      - http:
+          path: budget/{budgetId}
           method: get
+
+  updateBudget:
+    handler: handlers/budgetsHandler.updateBudget
+    events:
+      - http:
+          path: budget/{budgetId}
+          method: put
+
+  deleteBudget:
+    handler: handlers/budgetsHandler.deleteBudget
+    events:
+      - http:
+          path: budget/{budgetId}
+          method: delete
+
+  createRecord:
+    handler: handlers/recordsHandler.createRecord
+    events:
+      - http:
+          path: records
+          method: post
+
+  readRecord:
+    handler: handlers/recordsHandler.readRecord
+    events:
+      - http:
+          path: records
+          method: get
+          request:
+            parameters:
+              querystrings:
+                budgetId: true
+                startDate: false
+                endDate: false
+
+  updateRecord:
+    handler: handlers/recordsHandler.updateRecord
+    events:
+      - http:
+          path: records/{recordId}
+          method: put
+
+  deleteRecord:
+    handler: handlers/recordsHandler.deleteRecord
+    events:
+      - http:
+          path: records/{recordId}
+          method: delete
+
 
 resources:
   Resources:
-    CustomerTable:
+    BudgetTable:
       Type: AWS::DynamoDB::Table
       Properties:
+        TableName: ${self:service}-budgetTable-${sls:stage}
         AttributeDefinitions:
-          - AttributeName: primary_key
+          - AttributeName: budgetId
             AttributeType: S
-        BillingMode: PAY_PER_REQUEST
         KeySchema:
-          - AttributeName: primary_key
+          - AttributeName: budgetId
             KeyType: HASH
-        TableName: ${self:service}-customerTable-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+
+    RecordsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-recordsTable-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: recordId
+            AttributeType: S
+          - AttributeName: budgetId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: recordId
+            KeyType: HASH
+          - AttributeName: budgetId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+custom:
+  stageConfig:
+    dev:
+      NODE_ENV: development
+    prod:
+      NODE_ENV: production

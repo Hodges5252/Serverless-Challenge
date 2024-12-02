@@ -4,3 +4,5 @@ node_modules
 .idea/usage.statistics.xml
 .idea/dictionaries/
 .idea/shelf/
+__tests__
+jest.setup.js
