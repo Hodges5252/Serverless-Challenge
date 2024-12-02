@@ -11,24 +11,28 @@ module.exports = async (event) => {
 
         let keyConditionExpression = 'budgetId = :budgetId';
         const expressionAttributeValues = { ':budgetId': budgetId };
+        const expressionAttributeNames = {};
 
         if (startDate) {
             keyConditionExpression += ' AND #date >= :startDate';
             expressionAttributeValues[':startDate'] = startDate;
+            expressionAttributeNames['#date'] = 'date';
         }
         if (endDate) {
             keyConditionExpression += ' AND #date <= :endDate';
             expressionAttributeValues[':endDate'] = endDate;
+            expressionAttributeNames['#date'] = 'date';
         }
 
         const params = {
             TableName: process.env.RECORDS_TABLE,
             KeyConditionExpression: keyConditionExpression,
             ExpressionAttributeValues: expressionAttributeValues,
-            ExpressionAttributeNames: {
-                '#date': 'date',
-            },
         };
+
+        if (Object.keys(expressionAttributeNames).length > 0) {
+            params.ExpressionAttributeNames = expressionAttributeNames;
+        }
 
         const result = await ddbDocClient.send(new QueryCommand(params));
 
