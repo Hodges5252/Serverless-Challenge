@@ -14,7 +14,7 @@ module.exports = async (event) => {
 
         return successResponse({ message: 'Record deleted successfully' });
     } catch (err) {
-        console.error(err);
+        console.error('Error deleting record:', err);
         return errorResponse(err.message || 'Failed to delete record');
     }
 };

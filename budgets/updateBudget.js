@@ -1,4 +1,4 @@
-const {ddbDocClient, GetCommand, PutCommand} = require('../common/dynamoClient');
+const { ddbDocClient, GetCommand, UpdateCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 const { validateData } = require('../common/validationHelper');
 const { budgetSchema } = require('./budgetSchema');
@@ -29,23 +29,32 @@ module.exports = async (event) => {
             return errorResponse('Budget not found');
         }
 
-        // Prepare the updated budget object
-        const updatedBudget = {
-            ...existingBudget.Item,
-            ...data,
-            updatedAt: new Date().toISOString().split('T')[0],
-        };
+        // Define updatedAt timestamp
+        const updatedAt = new Date().toISOString().split('T')[0];
 
         // Update the budget in DynamoDB
-        await ddbDocClient.send(
-            new PutCommand({
+        const result = await ddbDocClient.send(
+            new UpdateCommand({
                 TableName: process.env.BUDGET_TABLE,
-                Item: { ...updatedBudget, budgetId },
+                Key: { budgetId },
+                UpdateExpression: `
+                    SET #categories = :categories,
+                        #updatedAt = :updatedAt
+                `,
+                ExpressionAttributeNames: {
+                    '#categories': 'categories',
+                    '#updatedAt': 'updatedAt',
+                },
+                ExpressionAttributeValues: {
+                    ':categories': data.categories,
+                    ':updatedAt': updatedAt,
+                },
+                ReturnValues: 'ALL_NEW', // Return the updated budget
             })
         );
 
         // Respond with the updated budget
-        return successResponse(updatedBudget);
+        return successResponse(result.Attributes);
     } catch (err) {
         console.error('Error updating budget:', err);
         return errorResponse(err.message || 'Failed to update budget');

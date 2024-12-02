@@ -1,7 +1,8 @@
-const {ddbDocClient, GetCommand, PutCommand} = require('../common/dynamoClient');
+const { ddbDocClient, GetCommand, UpdateCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 const { validateData } = require('../common/validationHelper');
 const { recordSchema } = require('./recordSchema');
+const { allocateAmountToCategories } = require('./recordUtil');
 
 module.exports = async (event) => {
     try {
@@ -11,43 +12,51 @@ module.exports = async (event) => {
         // Validate the incoming data against the schema
         validateData(data, recordSchema);
 
-        // Check if the record exists
-        const existingRecord = await ddbDocClient.send(
+        // Fetch the associated budget to compute category allocations
+        const budgetResult = await ddbDocClient.send(
             new GetCommand({
-                TableName: process.env.RECORDS_TABLE,
-                Key: { recordId },
+                TableName: process.env.BUDGET_TABLE,
+                Key: { budgetId: data.budgetId },
             })
         );
 
-        if (!existingRecord.Item) {
-            return errorResponse('Record not found');
+        if (!budgetResult.Item) {
+            return errorResponse('Budget not found');
         }
 
-        // Prepare the updated record with a timestamp
-        const updatedRecord = {
-            ...existingRecord.Item,
-            ...data,
-            updatedAt: new Date().toISOString().toISOString().split('T')[0],
+        // Allocate amount to categories
+        const categoryAllocations = allocateAmountToCategories(budgetResult.Item.categories, data.amount);
+
+        // Define the updatedAt timestamp
+        const updatedAt = new Date().toISOString();
+
+        // Update the record in the database
+        const updateParams = {
+            TableName: process.env.RECORDS_TABLE,
+            Key: { recordId, budgetId: data.budgetId },
+            UpdateExpression: `
+                SET amount = :amount,
+                    #date = :date,
+                    categoryAllocations = :categoryAllocations,
+                    updatedAt = :updatedAt
+            `,
+            ExpressionAttributeNames: {
+                '#date': 'date',
+            },
+            ExpressionAttributeValues: {
+                ':amount': data.amount,
+                ':date': data.date || updatedAt,
+                ':categoryAllocations': categoryAllocations,
+                ':updatedAt': updatedAt,
+            },
+            ReturnValues: 'ALL_NEW', // Return the updated item
+            ConditionExpression: 'attribute_exists(recordId) AND attribute_exists(budgetId)', // Ensure the record exists
         };
 
-        // Use UpdateCommand to update the record
-        await ddbDocClient.send(
-            new PutCommand({
-                TableName: process.env.RECORDS_TABLE,
-                Key: { recordId },
-                UpdateExpression: 'SET #data = :data, updatedAt = :updatedAt',
-                ExpressionAttributeNames: {
-                    '#data': 'data', // Map attribute names for reserved keywords
-                },
-                ExpressionAttributeValues: {
-                    ':data': data,
-                    ':updatedAt': updatedRecord.updatedAt,
-                },
-            })
-        );
+        const result = await ddbDocClient.send(new UpdateCommand(updateParams));
 
         // Return the updated record
-        return successResponse(updatedRecord);
+        return successResponse(result.Attributes);
     } catch (err) {
         console.error('Error updating record:', err);
         return errorResponse(err.message || 'Failed to update record');

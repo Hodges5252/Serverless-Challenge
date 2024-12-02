@@ -1,27 +1,40 @@
-const {ddbDocClient, GetCommand} = require('../common/dynamoClient');
+const { ddbDocClient, QueryCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 
 module.exports = async (event) => {
     try {
-        const { budgetId, startDate, endDate } = event.queryStringParameters;
+        const { budgetId, startDate, endDate } = event.queryStringParameters || {};
 
-        const result = await ddbDocClient.send(
-            new GetCommand({
-                TableName: process.env.RECORDS_TABLE,
-                KeyConditionExpression: 'budgetId = :budgetId',
-                ExpressionAttributeValues: { ':budgetId': budgetId },
-            })
-        );
+        if (!budgetId) {
+            return errorResponse('budgetId is required');
+        }
 
-        const filteredRecords = result.Items.filter((record) => {
-            const recordDate = record.date;
-            return (!startDate || recordDate >= startDate) &&
-                (!endDate || recordDate <= endDate);
-        });
+        let keyConditionExpression = 'budgetId = :budgetId';
+        const expressionAttributeValues = { ':budgetId': budgetId };
 
-        return successResponse(filteredRecords);
+        if (startDate) {
+            keyConditionExpression += ' AND #date >= :startDate';
+            expressionAttributeValues[':startDate'] = startDate;
+        }
+        if (endDate) {
+            keyConditionExpression += ' AND #date <= :endDate';
+            expressionAttributeValues[':endDate'] = endDate;
+        }
+
+        const params = {
+            TableName: process.env.RECORDS_TABLE,
+            KeyConditionExpression: keyConditionExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ExpressionAttributeNames: {
+                '#date': 'date',
+            },
+        };
+
+        const result = await ddbDocClient.send(new QueryCommand(params));
+
+        return successResponse(result.Items);
     } catch (err) {
-        console.error(err);
+        console.error('Error retrieving records:', err);
         return errorResponse(err.message || 'Failed to retrieve records');
     }
 };
