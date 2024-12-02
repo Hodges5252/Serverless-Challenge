@@ -4,6 +4,7 @@ const { validateData } = require('../common/validationHelper');
 const { budgetSchema } = require('./budgetSchema');
 const { isValidPercentage } = require('./budgetUtil');
 
+//Method for creating new budget
 module.exports = async (event) => {
     try {
         const data = (() => {
@@ -14,9 +15,10 @@ module.exports = async (event) => {
             }
         })();
 
-        // Validate input
+        // Validate input against the schema
         validateData(data, budgetSchema);
 
+        // Ensure total category percentages add up to 100
         if (!isValidPercentage(data.categories)) {
             return errorResponse('Total percentage must equal 100');
         }
@@ -26,6 +28,7 @@ module.exports = async (event) => {
             createdAt: new Date().toISOString().split('T')[0],
         };
 
+        //Add budget to database
         await ddbDocClient.send(
             new PutCommand({
                 TableName: process.env.BUDGET_TABLE,
@@ -34,6 +37,7 @@ module.exports = async (event) => {
         );
 
         return successResponse(newBudget);
+
     } catch (err) {
         console.error(err);
         return errorResponse(err.message || 'Failed to create budget');

@@ -1,3 +1,4 @@
+//Validation for budget allocation (categories must equal 100)
 module.exports = {
     calculateTotalPercentage: (categories) => {
         return categories.reduce((sum, cat) => sum + cat.percentage, 0);
