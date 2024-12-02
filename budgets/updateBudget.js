@@ -17,7 +17,6 @@ module.exports = async (event) => {
             return errorResponse('Total percentage must equal 100');
         }
 
-        // Optional: Check if the budget exists before updating
         const existingBudget = await ddbDocClient.send(
             new GetCommand({
                 TableName: process.env.BUDGET_TABLE,
