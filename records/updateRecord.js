@@ -33,13 +33,8 @@ module.exports = async (event) => {
         // Update the record in the database
         const updateParams = {
             TableName: process.env.RECORDS_TABLE,
-            Key: { recordId, budgetId: data.budgetId },
-            UpdateExpression: `
-                SET amount = :amount,
-                    #date = :date,
-                    categoryAllocations = :categoryAllocations,
-                    updatedAt = :updatedAt
-            `,
+            Key: { recordId }, // Only recordId is required
+            UpdateExpression: `SET amount = :amount, #date = :date, categoryAllocations = :categoryAllocations, updatedAt = :updatedAt`,
             ExpressionAttributeNames: {
                 '#date': 'date',
             },
@@ -50,7 +45,7 @@ module.exports = async (event) => {
                 ':updatedAt': updatedAt,
             },
             ReturnValues: 'ALL_NEW', // Return the updated item
-            ConditionExpression: 'attribute_exists(recordId) AND attribute_exists(budgetId)', // Ensure the record exists
+            ConditionExpression: 'attribute_exists(recordId)', // Ensure the record exists
         };
 
         const result = await ddbDocClient.send(new UpdateCommand(updateParams));

@@ -9,34 +9,29 @@ module.exports = async (event) => {
             return errorResponse('budgetId is required');
         }
 
-        let keyConditionExpression = 'budgetId = :budgetId';
         const expressionAttributeValues = { ':budgetId': budgetId };
-        const filterExpressions = [];
-        const expressionAttributeNames = {};
+        let keyConditionExpression = 'budgetId = :budgetId';
 
+        const filterExpressions = [];
         if (startDate) {
             filterExpressions.push('#date >= :startDate');
             expressionAttributeValues[':startDate'] = startDate;
-            expressionAttributeNames['#date'] = 'date';
         }
         if (endDate) {
             filterExpressions.push('#date <= :endDate');
             expressionAttributeValues[':endDate'] = endDate;
-            expressionAttributeNames['#date'] = 'date';
         }
-
-        const filterExpression = filterExpressions.length > 0 ? filterExpressions.join(' AND ') : null
 
         const params = {
             TableName: process.env.RECORDS_TABLE,
+            IndexName: 'BudgetIndex',
             KeyConditionExpression: keyConditionExpression,
             ExpressionAttributeValues: expressionAttributeValues,
-            ...(filterExpression && { FilterExpression: filterExpression }),
-            ...(Object.keys(expressionAttributeNames).length > 0 && { ExpressionAttributeNames: expressionAttributeNames }),
+            ...(filterExpressions.length > 0 && { FilterExpression: filterExpressions.join(' AND ') }),
+            ...(startDate || endDate ? { ExpressionAttributeNames: { '#date': 'date' } } : {}),
         };
 
         const result = await ddbDocClient.send(new QueryCommand(params));
-
         return successResponse(result.Items);
     } catch (err) {
         console.error('Error retrieving records:', err);

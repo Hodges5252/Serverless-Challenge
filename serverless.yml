@@ -116,8 +116,13 @@ resources:
         KeySchema:
           - AttributeName: recordId
             KeyType: HASH
-          - AttributeName: budgetId
-            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: BudgetIndex
+            KeySchema:
+              - AttributeName: budgetId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
 
 custom:

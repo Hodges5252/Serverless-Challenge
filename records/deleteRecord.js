@@ -1,30 +1,20 @@
-const { ddbDocClient, GetCommand, DeleteCommand } = require('../common/dynamoClient');
+const { ddbDocClient, DeleteCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 
 module.exports = async (event) => {
     try {
         const { recordId } = event.pathParameters;
 
-        const getResult = await ddbDocClient.send(
-            new GetCommand({
-                TableName: process.env.RECORDS_TABLE,
-                Key: { recordId },
-                ProjectionExpression: 'budgetId',
-            })
-        );
-
-        if (!getResult.Item) {
-            return errorResponse('Record not found');
+        if (!recordId) {
+            return errorResponse('recordId is required');
         }
 
-        const { budgetId } = getResult.Item;
+        const params = {
+            TableName: process.env.RECORDS_TABLE,
+            Key: { recordId },
+        };
 
-        await ddbDocClient.send(
-            new DeleteCommand({
-                TableName: process.env.RECORDS_TABLE,
-                Key: { recordId, budgetId },
-            })
-        );
+        await ddbDocClient.send(new DeleteCommand(params));
 
         return successResponse({ message: 'Record deleted successfully' });
     } catch (err) {
