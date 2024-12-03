@@ -9,6 +9,7 @@ module.exports = async (event) => {
             new GetCommand({
                 TableName: process.env.RECORDS_TABLE,
                 Key: { recordId },
+                ProjectionExpression: 'budgetId',
             })
         );
 
