@@ -1,3 +1,4 @@
+//Collection of budget functions
 const createBudget = require('../budgets/createBudget');
 const readBudget = require('../budgets/readBudget');
 const updateBudget = require('../budgets/updateBudget');

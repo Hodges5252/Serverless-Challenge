@@ -4,6 +4,7 @@ const { validateData } = require('../common/validationHelper');
 const { recordSchema } = require('./recordSchema');
 const { allocateAmountToCategories } = require('./recordUtil');
 
+
 module.exports = async (event) => {
     try {
         const { recordId } = event.pathParameters;

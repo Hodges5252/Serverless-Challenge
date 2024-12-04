@@ -1,5 +1,6 @@
 const Joi = require('joi');
 
+// Expected format of records
 const recordSchema = Joi.object({
     recordId: Joi.string().required(),
     budgetId: Joi.string().required(),

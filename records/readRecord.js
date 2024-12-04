@@ -1,6 +1,7 @@
 const { ddbDocClient, QueryCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 
+// Method for reading record information
 module.exports = async (event) => {
     try {
         const { budgetId, startDate, endDate } = event.queryStringParameters || {};
@@ -12,6 +13,7 @@ module.exports = async (event) => {
         const expressionAttributeValues = { ':budgetId': budgetId };
         let keyConditionExpression = 'budgetId = :budgetId';
 
+        // Optionally filter by date
         const filterExpressions = [];
         if (startDate) {
             filterExpressions.push('#date >= :startDate');
@@ -31,6 +33,7 @@ module.exports = async (event) => {
             ...(startDate || endDate ? { ExpressionAttributeNames: { '#date': 'date' } } : {}),
         };
 
+        // Search for records matching criteria and return results
         const result = await ddbDocClient.send(new QueryCommand(params));
         return successResponse(result.Items);
     } catch (err) {

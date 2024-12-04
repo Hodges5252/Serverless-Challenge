@@ -1,5 +1,6 @@
 const Joi = require('joi');
-//Expected format of new budgets/budget changes
+
+// Expected format of new budgets/budget changes
 module.exports = {
     budgetSchema: Joi.object({
         budgetId: Joi.string().required(),

@@ -1,3 +1,4 @@
+//Success/Failure response generation
 module.exports.successResponse = (data) => ({
     statusCode: 200,
     body: JSON.stringify(data),

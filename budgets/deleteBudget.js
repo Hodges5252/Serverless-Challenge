@@ -1,12 +1,12 @@
 const {ddbDocClient, DeleteCommand} = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 
-//Method for deleting budget
+// Method for deleting budget
 module.exports = async (event) => {
     try {
         const { budgetId } = event.pathParameters;
 
-        //Delete budget from database
+        // Delete budget from database
         await ddbDocClient.send(
             new DeleteCommand({
                 TableName: process.env.BUDGET_TABLE,

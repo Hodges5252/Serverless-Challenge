@@ -1,3 +1,4 @@
+//Data checker
 module.exports = {
     validateData: (data, schema) => {
         const { error } = schema.validate(data);

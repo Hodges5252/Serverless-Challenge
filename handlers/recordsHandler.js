@@ -1,3 +1,4 @@
+//Collection of record functions
 const createRecord = require('../records/createRecord');
 const readRecord = require('../records/readRecord');
 const updateRecord = require('../records/updateRecord');

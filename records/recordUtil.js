@@ -1,3 +1,4 @@
+// Allocation of record amount following budget categories
 module.exports = {
     allocateAmountToCategories: (categories, amount) => {
         const allocations = {};

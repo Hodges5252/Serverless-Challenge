@@ -4,7 +4,7 @@ const { validateData } = require('../common/validationHelper');
 const { budgetSchema } = require('./budgetSchema');
 const { isValidPercentage } = require('./budgetUtil');
 
-//Method for creating new budget
+// Method for creating new budget
 module.exports = async (event) => {
     try {
         const data = (() => {

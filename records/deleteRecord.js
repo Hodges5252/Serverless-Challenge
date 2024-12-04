@@ -1,6 +1,7 @@
 const { ddbDocClient, DeleteCommand } = require('../common/dynamoClient');
 const { successResponse, errorResponse } = require('../common/responseHelper');
 
+// Method for deleting record
 module.exports = async (event) => {
     try {
         const { recordId } = event.pathParameters;
@@ -14,6 +15,7 @@ module.exports = async (event) => {
             Key: { recordId },
         };
 
+        // Delete record from database
         await ddbDocClient.send(new DeleteCommand(params));
 
         return successResponse({ message: 'Record deleted successfully' });
